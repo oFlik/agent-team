@@ -1,0 +1,10 @@
+{
+  "pmoGate": {
+    "enabled": true,
+    "model": "sonnet",
+    "maxRounds": 3,
+    "onlyWhenFilesChanged": true,
+    "timeoutSeconds": 240,
+    "claudeCommand": "claude"
+  }
+}
