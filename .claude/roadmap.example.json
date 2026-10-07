@@ -1,0 +1,28 @@
+{
+  "project": "Exemplo",
+  "baseBranch": "main",
+  "phases": [
+    {
+      "id": "F1",
+      "title": "Fundação",
+      "goal": "Projeto rodando localmente com lint e testes no CI.",
+      "status": "todo",
+      "tasks": [
+        {
+          "id": "F1.1",
+          "title": "Estrutura inicial do projeto",
+          "scope": "Criar package.json, tsconfig e pasta src/ com um index que imprime a versão. Nada de framework ainda.",
+          "acceptance": ["npm run build gera dist/index.js", "node dist/index.js imprime a versão do package.json"],
+          "status": "todo"
+        },
+        {
+          "id": "F1.2",
+          "title": "Lint e testes",
+          "scope": "Configurar ESLint e Vitest com um teste do index.",
+          "acceptance": ["npm run lint passa sem avisos", "npm test roda pelo menos um teste e passa"],
+          "status": "todo"
+        }
+      ]
+    }
+  ]
+}

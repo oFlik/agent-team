@@ -67,7 +67,7 @@ O `pmo.md` é usado pelos dois caminhos: o hook lê o corpo dele como prompt, e 
 4. Na primeira vez, o Claude Code pede para você confiar nos hooks do projeto. Leia e aceite.
 
 Requisitos: Node 18+ e o `claude` no PATH. O projeto precisa ser um repositório git, porque o PMO
-olha o `git diff`.
+olha o `git diff`. Para o modo fase abrir o PR sozinho: um remote `origin` e o `gh` autenticado.
 
 ## Configuração (`.claude/team.json`)
 
@@ -79,6 +79,70 @@ olha o `git diff`.
 | `onlyWhenFilesChanged` | `true`     | Pula a revisão quando a rodada não mexeu em arquivos (perguntas)  |
 | `timeoutSeconds`       | `240`      | Tempo máximo de uma revisão                                       |
 | `claudeCommand`        | `"claude"` | Executável do Claude Code                                         |
+
+Esses campos ficam dentro de `pmoGate`. Os outros blocos do arquivo:
+
+| Campo                       | Padrão  | O que faz                                                            |
+| --------------------------- | ------- | -------------------------------------------------------------------- |
+| `autopilot.maxTasksPerRun`  | `5`     | Quantas tasks o coder emenda antes de parar e pedir um "continue"     |
+| `checks`                    | `[]`    | Comandos que o Stop roda antes do PMO: `{ "name", "command", "timeoutSeconds" }` |
+| `guard.enabled`             | `true`  | Liga ou desliga o guard                                              |
+| `guard.secretPaths` etc.    | ver `guard.mjs` | Cada lista que você puser aqui **substitui** a padrão inteira |
+
+## Modo fase: trabalhar sem você a cada interação
+
+Você define o roadmap em fases e tasks; o time trabalha uma fase inteira e te chama no PR.
+
+```
+/fase F1 ──▶ roadmap.mjs start-phase: valida, cria a branch fase/f1, ativa a 1ª task
+               │
+               ▼
+          coder trabalha a task ──▶ roadmap.mjs done F1.1 ──▶ Stop
+                                                            │
+             checks (lint/teste/build) ──falhou──▶ volta ao coder
+             PMO (julga contra escopo e aceite da task) ──revise──▶ volta ao coder
+                                                            │ approve
+             hook commita "task(F1.1): ..." e entrega a F1.2 ao coder ─┐
+                                                            ▲          │
+                                                            └──────────┘
+             última task aprovada ──▶ push + `gh pr create` ──▶ para e te mostra o PR
+```
+
+**Onde você entra:** no PR de cada fase; quando uma task fica `blocked` (decisão sua; depois
+`roadmap.mjs resume <task>`); quando o limite de rodadas ou de tasks por execução é atingido.
+
+**Roadmap:** `.claude/roadmap.json` é o que os hooks leem; o `ROADMAP.md` na raiz é a sua cópia
+legível, regerada a cada mudança de status. Para começar, copie `.claude/roadmap.example.json` para
+`.claude/roadmap.json` (ou peça ao coder para montar o roadmap com você) e rode
+`node .claude/scripts/roadmap.mjs validate`. Toda task precisa de critérios de aceite: é com eles que
+o PMO decide se a task acabou, e é o que mais segura alucinação.
+
+**Por que é seguro deixar rodar:** cada commit é uma task que passou pelas verificações e pelo PMO;
+o coder não consegue commitar, trocar de branch nem editar `.claude/`, `CLAUDE.md` ou o roadmap durante
+a fase (o guard bloqueia); o modo fase só fica ativo enquanto o repositório está na branch da fase.
+
+**Permissões:** um pedido de permissão no meio da fase para tudo até você responder. Para rodar
+sozinho, libere os comandos do seu projeto em `.claude/settings.json` (`permissions.allow`) ou use o
+modo automático do Claude Code. O guard continua valendo nos dois casos.
+
+## Guard (`.claude/hooks/guard.mjs`)
+
+Hook de `PreToolUse` que bloqueia antes de executar, sem depender de nenhum agente lembrar da regra:
+
+- **Segredos**: ler, editar ou mencionar num comando `.env`, `.env.*`, chaves `.pem`/`.key`,
+  `id_rsa`, `credentials*.json` (`.env.example` é liberado).
+- **Comandos perigosos**: `git push --force`, push para `main`/`master` (inclusive `HEAD:main`),
+  `rm -rf /`/`~`/`*`/`.`, `curl ... | sh`, `gh pr merge` (o merge é seu).
+- **Durante uma fase**: `git commit/push/switch/checkout/reset/rebase/merge/stash/cherry-pick/tag`,
+  apagar ou renomear branch, e escrita em `.claude/`, `CLAUDE.md` e `ROADMAP.md` da raiz. Comandos
+  encadeados (`&&`, `;`, `|`) são julgados um por um.
+- **Falha fechada**: se o `team.json` estiver quebrado, o guard bloqueia em vez de liberar tudo. Se o
+  `roadmap.json` estiver quebrado, as regras de fase continuam valendo enquanto a branch for `fase/*`.
+
+Limites conhecidos: os comandos Bash são checados pelo texto, então o guard pega engano e atalho, não
+um ataque deliberado. Um `git push` sem argumentos estando na `main` não é pego, e um `Grep` numa
+pasta pode ler arquivos de segredo que estejam nela. O commit de cada task usa `git add -A`: mantenha
+o `.gitignore` do projeto em dia. Ajuste as listas no bloco `guard` do `team.json`.
 
 ## Proteções
 

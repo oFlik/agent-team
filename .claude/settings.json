@@ -1,4 +1,9 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(node .claude/scripts/roadmap.mjs:*)"
+    ]
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -10,14 +15,25 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|MultiEdit|NotebookEdit|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\""
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pmo-gate.mjs\"",
-            "timeout": 300,
-            "statusMessage": "PMO revisando a entrega..."
+            "timeout": 900,
+            "statusMessage": "Verificações e PMO revisando a entrega..."
           }
         ]
       }

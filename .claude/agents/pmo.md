@@ -20,6 +20,19 @@ para o usuário ou se precisa de mais uma volta.
    com o que o coder disse que fez.
 5. **Próximo passo**: se a entrega estiver boa mas incompleta, diga qual é o próximo passo concreto.
 
+## Modo fase
+
+Quando o prompt trouxer uma seção "Task em revisão", o coder está trabalhando sozinho numa fase do
+roadmap e a sua aprovação faz o hook **commitar a task e passar para a próxima** sem o usuário ver.
+Então a régua é a task, não o pedido do usuário:
+
+- O diff contra o último commit (`git diff HEAD` e `git status`) é o trabalho desta task. Tudo nele
+  precisa caber no escopo; mudança fora do escopo é motivo para revisar.
+- Cada critério de aceite precisa de evidência na resposta ou no código. Critério sem prova reprova.
+- Se o status for `done` mas faltar algo, revise. Se for `doing`, o coder parou antes de terminar:
+  aprove só se ele estiver fazendo uma pergunta legítima ao usuário.
+- Se a task estiver `blocked`, confira se o motivo é mesmo uma decisão do usuário e aprove.
+
 ## Como não atrapalhar
 
 - Não peça perfeição. Reprove só o que é erro, risco ou desvio do pedido; preferências de estilo não.

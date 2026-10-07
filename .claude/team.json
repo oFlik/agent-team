@@ -6,5 +6,12 @@
     "onlyWhenFilesChanged": true,
     "timeoutSeconds": 240,
     "claudeCommand": "claude"
+  },
+  "autopilot": {
+    "maxTasksPerRun": 5
+  },
+  "checks": [],
+  "guard": {
+    "enabled": true
   }
 }
